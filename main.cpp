@@ -43,6 +43,7 @@ void gameloop(char* matrix)
         {
             case GameState::Initial:
             {
+                
                 std::cout << "\n Do you want to start new game?(y/n)";
                 char ans = '\n';
                 std::cin >> ans;
@@ -54,7 +55,37 @@ void gameloop(char* matrix)
                         *p = '_';
                         ++p;
                     }
-                    
+                    std::cout <<" Welcome to the game of TicTacToe!\n X goes first!\n";
+                    std::cout << " X is AI(1) or Player(2)?\n";
+                    std::cin >> ans;
+                    if (ans=='1')
+                    {
+                        players[0]=false;
+                    }
+                    else if(ans=='2')
+                    {
+                        players[0]=true;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid input, try again\n";
+                        break;
+                    }
+                    std::cout << " O is AI(1) or Player(2)?\n";
+                    std::cin >> ans;
+                    if (ans=='1')
+                    {
+                        players[1]=false;
+                    }
+                    else if(ans=='2')
+                    {
+                        players[1]=true;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid input, try again";
+                        break;
+                    }
                     drawGameField(matrix);
                     turnSymbol = 0;
                     prevTurnSymbol = turnSymbol;
@@ -76,7 +107,8 @@ void gameloop(char* matrix)
                 std::cin >> x;
                 std::cout << symb << " turn, enter y dimension:";
                 std::cin >> y;
-
+                --x;
+                --y;
                 if (x >= 0 && x < 3 && y >= 0 && y < 3 && matrix[x*3+y] == '_')
                 {
                     matrix[x*3+y] = symb;
@@ -122,6 +154,7 @@ void gameloop(char* matrix)
             case GameState::CheckWin:
             {
                 drawGameField(matrix);
+                getchar();
                 if(checkinsightwin(playSymbols[turnSymbol], matrix))
                 {
                     std::cout << playSymbols[turnSymbol] <<" wins!\n";
