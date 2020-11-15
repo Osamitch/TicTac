@@ -4,14 +4,15 @@
 #include <limits>
 #include <cmath>
 #include <iostream>
-void drawGameField(char*);
+void drawGameField(char*, const int&);
 void gameloop(char*);
-float insighttree(char*, char, char, bool, float);
-bool checkinsightwin(char, char*);
+float insighttree(char*, char, char, bool, float, const int&, int);
+bool checkinsightwin(char, char*,const int&);
 
 int main()
 {
-    char fieldmatrix[] = {'_', '_', '_', '_', '_', '_', '_', '_', '_'};
+    char fieldmatrix[] = {'_', '_', '_', '_', '_', '_', '_', '_', '_','_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_'};
+
     gameloop(fieldmatrix);
 
     return 0;
@@ -34,7 +35,7 @@ void gameloop(char* matrix)
     char playSymbols[] = {'X', 'O'};
     auto turnSymbol = 0;
     auto prevTurnSymbol = turnSymbol;
-
+    auto width = 5;
     while (1) //main game loop
     {
         auto symb = playSymbols[turnSymbol];
@@ -50,11 +51,24 @@ void gameloop(char* matrix)
                 if (ans == 'y' || ans == 'Y')
                 {
                     char *p = (char *)matrix;
-                    while (p - (char *)matrix < 9)
+                    while (p - (char *)matrix < 25)
                     {
                         *p = '_';
                         ++p;
                     }
+                    std::cout << " 3, 4 or 5 game field?\n";
+                    int ans_i=0;
+                    std::cin >> ans_i;
+                    if (ans_i>=3 && ans_i<=5)
+                    {
+                        width=ans_i;
+                    }
+                    else
+                    {
+                        std::cout << "Invalid input, try again\n";
+                        break;
+                    }
+                    
                     std::cout <<" Welcome to the game of TicTacToe!\n X goes first!\n";
                     std::cout << " X is AI(1) or Player(2)?\n";
                     std::cin >> ans;
@@ -86,7 +100,7 @@ void gameloop(char* matrix)
                         std::cout << "Invalid input, try again";
                         break;
                     }
-                    drawGameField(matrix);
+                    drawGameField(matrix, width);
                     turnSymbol = 0;
                     prevTurnSymbol = turnSymbol;
                     state = players[turnSymbol] ? GameState::PlayerTurn : GameState::AITurn;
@@ -109,9 +123,9 @@ void gameloop(char* matrix)
                 std::cin >> y;
                 --x;
                 --y;
-                if (x >= 0 && x < 3 && y >= 0 && y < 3 && matrix[x*3+y] == '_')
+                if (x >= 0 && x < width && y >= 0 && y < width && matrix[x*width+y] == '_')
                 {
-                    matrix[x*3+y] = symb;
+                    matrix[x*width+y] = symb;
 
                     state = GameState::CheckWin;
                 }
@@ -124,20 +138,20 @@ void gameloop(char* matrix)
             case GameState::AITurn:
             {
                 auto max_win = -std::numeric_limits<float>::infinity();
-                std::cout << symb << " AI turn:\n";
+                std::cout << symb << " AI turn, can take time";
                 int max_x = 0;
                 int max_y = 0;
-                for (int x = 0; x < 3; ++x)
+                for (int x = 0; x < width; ++x)
                 {
-                    for (int y = 0; y < 3; ++y)
+                    for (int y = 0; y < width; ++y)
                     {
-                        if (matrix[x*3+y] == '_')
+                        if (matrix[x*width+y] == '_')
                         {
-                            matrix[x*3+y] = symb;
+                            matrix[x*width+y] = symb;
                             auto max_weight = 1.f;
-                            auto win = insighttree((char*)matrix, symb, enemysymb, false, max_weight);
-                            matrix[x*3+y] = '_';
-                            
+                            auto win = insighttree((char*)matrix, symb, enemysymb, false, max_weight, width, 6);
+                            matrix[x*width+y] = '_';
+                            std::cout<< ".";
                             if (win > max_win)
                             {
                                 max_win = win;
@@ -147,15 +161,16 @@ void gameloop(char* matrix)
                         }
                     }
                 }
-                matrix[max_x*3 + max_y] = symb;
+                std::cout<<'\n';
+                matrix[max_x*width + max_y] = symb;
                 state = GameState::CheckWin;
                 break;
             }
             case GameState::CheckWin:
             {
-                drawGameField(matrix);
+                drawGameField(matrix, width);
                 getchar();
-                if(checkinsightwin(playSymbols[turnSymbol], matrix))
+                if(checkinsightwin(playSymbols[turnSymbol], matrix, width))
                 {
                     std::cout << playSymbols[turnSymbol] <<" wins!\n";
                     state = GameState::Initial;
@@ -163,7 +178,7 @@ void gameloop(char* matrix)
                 else
                 {
                     bool is_draw = true;
-                    for (int i = 0; i < 9; ++i)
+                    for (int i = 0; i < width*width; ++i)
                     {
                         if (matrix[i] == '_')
                         {
@@ -188,33 +203,33 @@ void gameloop(char* matrix)
     }
 }
 
-void drawGameField(char* matrix)
+void drawGameField(char* matrix, const int &width)
 {
-    for (int y = 2; y >= 0; --y)
+    for (int y = width-1; y >= 0; --y)
     {
-        for (int x = 0; x < 3; ++x)
+        for (int x = 0; x < width; ++x)
         {
-            std::cout << "|" << matrix[x*3+y];
+            std::cout << "|" << matrix[x*width+y];
         }
 
         std::cout << "|\n";
     }
 }
 
-float insighttree(char* matrix, char symb, char enemysymb, bool isMyturn, float weight)
+float insighttree(char* matrix, char symb, char enemysymb, bool isMyturn, float weight, const int& width, int depth)
 {
-    if(checkinsightwin(symb, matrix))
+    if(checkinsightwin(symb, matrix, width))
     {
         return weight;
     }
-    else if(checkinsightwin(enemysymb, matrix))
+    else if(checkinsightwin(enemysymb, matrix, width))
     {
         return -weight;
     }
     else
     {
         bool is_draw = true;
-        for (int i = 0; i < 9; ++i)
+        for (int i = 0; i < width*width; ++i)
         {
             if (matrix[i] == '_')
             {
@@ -229,43 +244,55 @@ float insighttree(char* matrix, char symb, char enemysymb, bool isMyturn, float 
     }
 
     float ret = 0.f;
-    for (int x = 0; x < 3; ++x)
+    --depth;
+    if (depth<=0)
     {
-        for (int y = 0; y < 3; ++y)
+        return ret;
+    }
+    for (int x = 0; x < width; ++x)
+    {
+        for (int y = 0; y < width; ++y)
         {
-            if (matrix[x*3+y] == '_')
+            if (matrix[x*width+y] == '_')
             {
-                char inmatrix[3*3];
-                memcpy(inmatrix, matrix, 3 * 3);
+                char inmatrix[25];
+                std::copy(matrix, matrix+width*width, inmatrix);
                 if (isMyturn)
-                    inmatrix[x*3+y] = symb;
+                    inmatrix[x*width+y] = symb;
                 else
-                    inmatrix[x*3+y] = enemysymb;
-
-                ret += insighttree(inmatrix, symb, enemysymb, !isMyturn, weight / 2.f);
+                    inmatrix[x*width+y] = enemysymb;
+                
+                ret += insighttree(inmatrix, symb, enemysymb, !isMyturn, weight / 2.f, width, depth);
             }
         }
     }
     return ret;// * weight;
 }
 
-bool checkinsightwin(char symb, char* matrix)
+bool checkinsightwin(char symb, char* matrix, const int &width)
 {
     bool res = false;
-    bool diag = true;
     bool row = true;
     bool column = true;
-    for (int y = 0; y < 3; ++y)
+    for (int y = 0; y < width; ++y)
     {
-        for (int x = 0; x < 3; ++x)
+        for (int x = 0; x < width; ++x)
         {
-            column = column && (matrix[x*3+y] == symb);
-            row = row && (matrix[y*3+x] == symb);
+            column = column && (matrix[x*width+y] == symb);
+            row = row && (matrix[y*width+x] == symb);
         }
         res = res || row || column;
         row = true;
         column = true;
     }
-    diag = diag && (matrix[1*3+1] == symb) && ((matrix[0*3+0] == symb && matrix[2*3+2] == symb) || (matrix[0*3+2] == symb && matrix[2*3+0] == symb));
-    return diag || res;
+
+    bool diag1 = true;
+    bool diag2 = true;
+    for (int x=0; x<width; ++x)
+    {
+
+        diag1 = (diag1 && matrix[x*width +x] ==symb);
+        diag2 = (diag2 && matrix[(width-1-x)*width +x]==symb);
+    }
+    return diag1 ||diag2 || res;
 }
